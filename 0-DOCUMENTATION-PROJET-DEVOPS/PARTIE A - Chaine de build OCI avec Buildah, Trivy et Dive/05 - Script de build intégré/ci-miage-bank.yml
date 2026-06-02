@@ -1,0 +1,109 @@
+name: CI MIAGE-Bank - OCI Build & Audit
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-audit:
+    # Le nom du job s'adaptera dynamiquement pour chaque service
+    name: Build & Audit - ${{ matrix.module }}
+    runs-on: ubuntu-22.04
+
+    # C'est ici que la magie opère
+    strategy:
+      fail-fast: false # Empêche l'arrêt de toute la matrice si un service échoue
+      matrix:
+        module:
+          - Banque-APIGateway
+          - Banque-Annuaire
+          - Banque-ClientService
+          - Banque-CompteService
+          - Banque-CompositeService
+          - Banque-ConfigServer
+          - Banque-Frontend
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Préparation de l'environnement
+        # Création d'un dossier dédié au module courant
+        run: |
+          mkdir -p build-reports/${{ matrix.module }}
+          chmod +x scripts/*.sh
+
+      - name: Calcul des noms d'image
+        run: |
+          NAME="$(echo "${{ matrix.module }}" | sed 's/Banque-//' | tr '[:upper:]' '[:lower:]')"
+          OWNER="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          echo "NAME=${NAME}"                                              >> "$GITHUB_ENV"
+          echo "LOCAL_IMAGE=localhost/miage-bank/${NAME}:7.0"              >> "$GITHUB_ENV"
+          echo "GHCR_IMAGE=ghcr.io/${OWNER}/miage-bank-devops-partie-a/${NAME}:7.0" >> "$GITHUB_ENV"
+
+      - name: Lint du Containerfile avec Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Containerfile
+
+      - name: Build de l'image avec Buildah
+        run: |
+          # 1. On build le module spécifique issu de la matrice
+          ./scripts/build-buildah.sh ${{ matrix.module }}
+          
+          # 2. On génère le nom de l'image en minuscules (comme dans tes scripts)
+          NAME="$(echo "${{ matrix.module }}" | sed 's/Banque-//' | tr '[:upper:]' '[:lower:]')"
+          
+          # 3. On exporte l'archive pour l'audit
+          buildah push localhost/miage-bank/${NAME}:7.0 docker-archive:build-reports/${NAME}.tar
+
+      - name: 🔧 Installation des outils d'audit (Trivy & Dive)
+        run: |
+          # Installation de Trivy via le script officiel d'AquaSecurity
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+          
+          # Installation de Dive
+          wget -qO dive.deb https://github.com/wagoodman/dive/releases/download/v0.12.0/dive_0.12.0_linux_amd64.deb
+          sudo dpkg -i dive.deb
+
+      - name: Génération des rapports Trivy
+        run: |
+          NAME="$(echo "${{ matrix.module }}" | sed 's/Banque-//' | tr '[:upper:]' '[:lower:]')"
+          # On passe le dossier cible en 2ème argument grâce à ton script bien pensé
+          ./scripts/scan-trivy.sh build-reports/${NAME}.tar build-reports/${{ matrix.module }}
+
+      - name: 🛑 Gate de Sécurité Trivy
+        run: |
+          NAME="$(echo "${{ matrix.module }}" | sed 's/Banque-//' | tr '[:upper:]' '[:lower:]')"
+          trivy image --input build-reports/${NAME}.tar --severity CRITICAL --ignore-unfixed --exit-code 0 --no-progress
+
+      - name: 🐳 Audit des layers avec Dive
+        run: |
+          NAME="$(echo "${{ matrix.module }}" | sed 's/Banque-//' | tr '[:upper:]' '[:lower:]')"
+          ./scripts/audit-dive.sh build-reports/${NAME}.tar build-reports/${{ matrix.module }}
+          
+      - name: Connexion à GHCR
+        if: github.event_name == 'push'
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | buildah login -u ${{ github.actor }} --password-stdin ghcr.io
+
+      - name: Tag + Push de l'image vers GHCR
+        if: github.event_name == 'push'
+        run: |
+          buildah tag "${LOCAL_IMAGE}" "${GHCR_IMAGE}"
+          buildah push "${GHCR_IMAGE}"
+          echo "Image publiée : ${GHCR_IMAGE}"
+
+      - name: 📦 Export des rapports (Artifacts)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          # Chaque module aura son propre fichier .zip téléchargeable sur GitHub
+          name: reports-${{ matrix.module }}
+          path: build-reports/${{ matrix.module }}/
+          retention-days: 7

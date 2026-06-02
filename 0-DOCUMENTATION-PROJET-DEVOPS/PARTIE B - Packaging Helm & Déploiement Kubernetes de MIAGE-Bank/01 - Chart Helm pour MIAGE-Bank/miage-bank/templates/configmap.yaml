@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: miage-bank-config
+  namespace: {{ .Values.global.namespace }}
+data:
+  APP_ENV: "prod"
+  LOG_LEVEL: "INFO"

@@ -1,0 +1,41 @@
+---
+# 1. Bloquer tout le trafic entrant par défaut (Default-deny)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: {{ .Values.global.namespace }}
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+
+---
+# 2. Autoriser les micro-services à communiquer entre eux
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-intra-namespace
+  namespace: {{ .Values.global.namespace }}
+spec:
+  podSelector: {}
+  ingress:
+    - from:
+        - podSelector: {}
+
+---
+# 3. Autoriser uniquement le trafic provenant du contrôleur Traefik
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-traefik
+  namespace: {{ .Values.global.namespace }}
+spec:
+  podSelector: {}
+  ingress:
+    - from:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              # Label standard identifiant les pods du contrôleur Traefik
+              app.kubernetes.io/name: traefik

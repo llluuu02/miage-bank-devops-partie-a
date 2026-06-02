@@ -1,0 +1,32 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: miage-bank-ingress
+  namespace: {{ .Values.global.namespace }}
+spec:
+  # Classe déclarée via le champ standard (l'annotation kubernetes.io/ingress.class
+  # est dépréciée). Vaut "traefik" d'après values.yaml.
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ .Values.global.domain }}
+      http:
+        paths:
+          # 1) /api -> API Gateway. La gateway matche déjà /api/clients, /api/comptes,
+          #    /api/clientscomptes : on transmet le préfixe tel quel (pas de stripPrefix).
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: apigateway
+                port:
+                  number: 10000
+          # 2) / -> Frontend (Angular servi par nginx). Catch-all, déclaré en dernier.
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
+{{- end }}

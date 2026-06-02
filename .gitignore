@@ -1,0 +1,12 @@
+# Dossiers de compilation Maven
+target/
+*.jar
+
+# Fichiers de l'IDE IntelliJ
+.idea/
+*.iml
+
+# Dossiers générés par la CI locale
+build-reports/
+
+*/node_modules/

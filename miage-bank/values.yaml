@@ -1,0 +1,297 @@
+# Default values for miage-bank.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+replicaCount: 1
+
+# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+image:
+  repository: nginx
+  # This sets the pull policy for images.
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+# This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+imagePullSecrets: []
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
+# This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# This is for setting Kubernetes Annotations to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+podAnnotations: {}
+# This is for setting Kubernetes Labels to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  type: ClusterIP
+  # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+  port: 80
+
+# This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
+ingress:
+  enabled: true
+  className: "traefik"
+
+# -- Expose the service via gateway-api HTTPRoute
+# Requires Gateway API resources and suitable controller installed within the cluster
+# (see: https://gateway-api.sigs.k8s.io/guides/)
+httpRoute:
+  # HTTPRoute enabled.
+  enabled: false
+  # HTTPRoute annotations.
+  annotations: {}
+  # Which Gateways this Route is attached to.
+  parentRefs:
+  - name: gateway
+    sectionName: http
+    # namespace: default
+  # Hostnames matching HTTP header.
+  hostnames:
+  - chart-example.local
+  # List of rules and filters applied.
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /headers
+  #   filters:
+  #   - type: RequestHeaderModifier
+  #     requestHeaderModifier:
+  #       set:
+  #       - name: My-Overwrite-Header
+  #         value: this-is-the-only-value
+  #       remove:
+  #       - User-Agent
+  # - matches:
+  #   - path:
+  #       type: PathPrefix
+  #       value: /echo
+  #     headers:
+  #     - name: version
+  #       value: v2
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+
+# This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# Additional volumes on the output Deployment definition.
+volumes: []
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
+
+# Additional volumeMounts on the output Deployment definition.
+volumeMounts: []
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+
+
+
+# Rajout
+global:
+  namespace: miage-bank
+  domain: miage-bank.local
+  imageRegistry: ghcr.io/llluuu02/miage-bank-devops-partie-a
+
+
+microservices:
+  apigateway:
+    imageName: apigateway
+    port: 10000
+    replicas: 1
+    extraEnv:
+      - name: SPRING_APPLICATION_JSON
+        value: '{"eureka":{"client":{"service-url":{"defaultZone":"http://annuaire:10001/eureka/"}}}}'
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+
+  annuaire:
+    imageName: annuaire
+    port: 10001
+    replicas: 1
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+
+  configserver:
+    imageName: configserver
+    port: 10003
+    replicas: 1
+    probeTimeout: 5
+    startup: true
+    extraEnv:
+      # 1. On pointe vers TON dépôt GitHub
+      - name: SPRING_CLOUD_CONFIG_SERVER_GIT_URI
+        value: "https://github.com/llluuu02/miage-bank-devops-partie-a.git"
+      # 2. On précise que la branche par défaut est 'main' (et non 'master')
+      - name: SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL
+        value: "main"
+      # 3. Indispensable si tes fichiers .yml sont dans ce sous-dossier (sinon retire cette variable)
+      - name: SPRING_CLOUD_CONFIG_SERVER_GIT_SEARCH_PATHS
+        value: "Banque-configs"
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+
+  clientservice:
+    imageName: clientservice
+    port: 10011
+    replicas: 1
+    secret: true
+    secretEnvPrefix: SPRING_DATASOURCE
+    extraEnv:
+      - name: SPRING_APPLICATION_NAME
+        value: "clientservice"
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+
+  compteservice:
+    imageName: compteservice
+    port: 10021
+    replicas: 1
+    secret: true
+    secretEnvPrefix: MONGO_CRED
+    disableConfigImport: false
+    extraEnv:
+      - name: SPRING_APPLICATION_NAME
+        value: "compteservice"
+      - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+        value: "true"
+      - name: SPRING_DATA_MONGODB_URI
+        value: "mongodb://$(MONGO_CRED_USERNAME):$(MONGO_CRED_PASSWORD)@bnkmongo:27017/banquebd?authSource=admin"
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+
+  compositeservice:
+    imageName: compositeservice
+    port: 10031
+    replicas: 1
+    extraEnv:
+      - name: SPRING_APPLICATION_NAME
+        value: "compositeservice"
+      - name: SPRING_ZIPKIN_ENABLED
+        value: "false"
+      - name: SPRING_SLEUTH_ENABLED
+        value: "false"
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+
+  frontend:
+    imageName: frontend
+    port: 80
+    replicas: 1
+    springApp: false
+    healthPath: "/"
+    initialDelay: 10
+    readinessDelay: 5
+    resources:
+      requests: { memory: "128Mi", cpu: "50m" }
+      limits: { memory: "256Mi", cpu: "250m" }
+
+
+databases:
+  mysql:
+    enabled: true
+    image: mysql:8.0
+    database: banquebd
+    storage: 1Gi
+    credentialsSecret: clientservice-secret
+  mongo:
+    enabled: true
+    image: mongo:6.0
+    database: banquebd
+    storage: 1Gi
+    credentialsSecret: compteservice-secret
+

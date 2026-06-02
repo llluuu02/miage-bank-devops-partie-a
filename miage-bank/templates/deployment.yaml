@@ -1,0 +1,92 @@
+{{- range $name, $config := .Values.microservices }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Values.global.namespace }}
+  labels:
+    app: {{ $name }}
+spec:
+  replicas: {{ $config.replicas }}
+  selector:
+    matchLabels:
+      app: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $name }}
+    spec:
+      # Conformément au sujet : ServiceAccount dédié (least privilege)
+      serviceAccountName: {{ $name }}-sa
+      containers:
+        - name: {{ $name }}
+          # Registry globale + nom de l'image + tag (= Chart.AppVersion, ici 7.0)
+          image: "{{ $.Values.global.imageRegistry }}/{{ $config.imageName }}:{{ $.Chart.AppVersion }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: {{ $config.port }}
+              protocol: TCP
+
+          env:
+            - name: SERVER_PORT
+              value: "{{ $config.port }}"
+            {{- /* Les variables Spring ne sont injectées que pour les services Java.
+                   Le frontend (nginx) déclare springApp: false -> aucune de ces variables. */}}
+            {{- if not (eq ($config.springApp | toString) "false") }}
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://annuaire:10001/eureka/"
+            {{- if and (ne $name "configserver") (ne $name "annuaire") (not $config.disableConfigImport) }}
+            - name: SPRING_CONFIG_IMPORT
+              value: "optional:configserver:http://configserver:10003"
+            {{- end }}
+            {{- if $config.secret }}
+            - name: {{ $config.secretEnvPrefix | default "SPRING_DATASOURCE" }}_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $name }}-secret
+                  key: DB_USER
+            - name: {{ $config.secretEnvPrefix | default "SPRING_DATASOURCE" }}_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $name }}-secret
+                  key: DB_PASSWORD
+            {{- end }}
+            {{- end }}
+            {{- range $config.extraEnv }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+            {{- end }}
+
+          # Conformément au sujet : resources.requests et resources.limits
+          resources:
+            {{- toYaml $config.resources | nindent 12 }}
+
+          # Probes. Chemin paramétrable via healthPath :
+          #   - services Spring  -> /actuator/health (défaut)
+          #   - frontend (nginx) -> /  (pas d'Actuator)
+          {{- if $config.startup }}
+          startupProbe:
+            httpGet:
+              path: {{ $config.healthPath | default "/actuator/health" }}
+              port: http
+            failureThreshold: 30
+            periodSeconds: 10
+            timeoutSeconds: {{ $config.probeTimeout | default 3 }}
+          {{- end }}
+          livenessProbe:
+            httpGet:
+              path: {{ $config.healthPath | default "/actuator/health" }}
+              port: http
+            initialDelaySeconds: {{ $config.initialDelay | default 45 }}
+            periodSeconds: 15
+            timeoutSeconds: {{ $config.probeTimeout | default 3 }}
+          readinessProbe:
+            httpGet:
+              path: {{ $config.healthPath | default "/actuator/health" }}
+              port: http
+            initialDelaySeconds: {{ $config.readinessDelay | default 20 }}
+            periodSeconds: 10
+            timeoutSeconds: {{ $config.probeTimeout | default 3 }}
+{{- end }}

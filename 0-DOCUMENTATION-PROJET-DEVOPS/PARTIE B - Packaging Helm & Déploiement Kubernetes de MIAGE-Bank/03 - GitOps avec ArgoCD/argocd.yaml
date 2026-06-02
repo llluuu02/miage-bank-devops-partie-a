@@ -1,0 +1,47 @@
+# =============================================================================
+#  argocd/application.yaml — Application ArgoCD pour MIAGE-Bank
+# -----------------------------------------------------------------------------
+#  Déploie le chart Helm miage-bank/ depuis le dépôt Git, branche main, en
+#  synchronisation automatique (prune + selfHeal), conformément au sujet.
+#
+#    kubectl apply -f argocd/application.yaml
+#
+#  Prérequis NON gérés par cette Application (le "oeuf ou la poule" du sujet) :
+#    - CRD External Secrets Operator déjà installées
+#    - Vault déployé et peuplé (secret/miage-bank/*)
+#    - MySQL / MongoDB (si déployés hors chart)
+#  ArgoCD ne peut pas bootstrapper ces prérequis : ils doivent exister avant.
+# =============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: miage-bank
+  namespace: argocd
+  # Empêche ArgoCD de supprimer l'app sans nettoyer ses ressources
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/llluuu02/miage-bank-devops-partie-a.git
+    targetRevision: main
+    path: miage-bank          # dossier du chart Helm dans le dépôt
+    helm:
+      valueFiles:
+        - values.yaml
+      # Décommente pour appliquer aussi le profil prod :
+      # valueFiles:
+      #   - values.yaml
+      #   - values-prod.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: miage-bank
+
+  syncPolicy:
+    automated:
+      prune: true             # supprime les ressources retirées du Git
+      selfHeal: true          # ré-applique si dérive manuelle détectée
+    syncOptions:
+      - CreateNamespace=true  # ArgoCD crée le namespace (on a retiré namespace.yaml du chart)

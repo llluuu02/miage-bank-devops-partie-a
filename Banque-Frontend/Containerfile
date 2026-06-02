@@ -1,0 +1,30 @@
+# ==========================================
+# Étape 1 : Builder (Node.js)
+# ==========================================
+FROM docker.io/library/node:20-alpine AS builder
+
+WORKDIR /app
+
+# Optimisation du cache NPM
+COPY Banque-Frontend/package*.json ./
+RUN npm ci
+
+# Copie du code source et compilation
+COPY Banque-Frontend/ ./
+RUN npm run build -- --configuration production
+
+# ==========================================
+# Étape 2 : Runtime (Serveur Web Nginx)
+# ==========================================
+FROM docker.io/library/nginx:alpine
+
+# Copie des fichiers compilés depuis le builder
+# Attention : Angular 17+ place les fichiers dans dist/nom-du-projet/browser
+COPY --from=builder /app/dist/Banque-Frontend/browser /usr/share/nginx/html
+
+# (Optionnel) Copie d'une configuration Nginx pour gérer le routage Single Page Application
+# COPY Banque-Frontend/nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+# Nginx démarre par défaut, pas besoin d'ENTRYPOINT complexe
