@@ -1,43 +1,86 @@
-NOM : GODARD;
+NOM : GODARD
 Prénom : Lucas
 
-## Architecture déployée
+# TP DevOps — MIAGE Bank : Buildah/Trivy/Dive & Helm/Kubernetes
 
-L'application comprend six micro-services Spring Cloud, plus leurs deux bases de
-données, le tout dans le namespace `miage-bank` :
+Projet réalisé dans le cadre du cours **M2 MIAGE - Mise en œuvre DevOps**.
+Il couvre la conteneurisation (Partie A) et le déploiement Kubernetes
+GitOps (Partie B) de l'application micro-services **MIAGE-Bank**.
 
-| Composant          | Port  | Rôle                                  | Base       |
-| ------------------ | ----- | ------------------------------------- | ---------- |
-| `annuaire`         | 10001 | Service registry (Eureka)             | —          |
-| `configserver`     | 10003 | Config centralisée (Spring Cloud Cfg) | —          |
-| `clientservice`    | 10011 | Gestion des clients                   | MySQL      |
-| `compteservice`    | 10021 | Gestion des comptes                   | MongoDB    |
-| `compositeservice` | 10031 | Agrégation client + compte            | —          |
-| `apigateway`       | 10000 | Point d'entrée unique                 | —          |
-| `bnkmysql`         | 3306  | Base MySQL (clientservice)            | —          |
-| `bnkmongo`         | 27017 | Base MongoDB (compteservice)          | —          |
+## Origine du projet
 
-
+L'application MIAGE-Bank (micro-services Spring Cloud) provient de la correction d'une autre matière du cursus (cours
+Architecture Micro-services Cloud). Le TP porte sur la
+**chaîne DevOps** construite autour de cette application : build OCI, analyse de
+sécurité, packaging Helm, déploiement Kubernetes et GitOps. Le code applicatif
+Java n'a pas été développé ici ; un **frontend Angular** a en revanche été ajouté
+pour illustrer l'application. L'application MIAGE-Bank initiale n'a pas été modifiée : des
+fichiers inutiles au projet DevOps tel que le docker-compose.yml sont présents.
 
 
-## 7. Vérifications finales
+## Où trouver la documentation et les livrables
 
-```bash
-kubectl -n miage-bank get pods           # 8 pods Running
-kubectl -n miage-bank get externalsecret # SecretSynced / True
-kubectl -n miage-bank get ingress        # CLASS=traefik, ADDRESS renseignée
-kubectl -n miage-bank get networkpolicy  # 3 policies
-kubectl -n argocd get application miage-bank   # Synced / Healthy
+Toute la documentation détaillée se trouve dans le dossier
+**`0-DOCUMENTATION-PROJET-DEVOPS/`**, organisé selon le plan du sujet :
+
+```
+0-DOCUMENTATION-PROJET-DEVOPS/
+├── PARTIE A - Chaine de build OCI avec Buildah, Trivy et Dive/
+│   ├── 01 - Analyse comparative Docker vs Buildah/   (DockerVSBuildah.md)
+│   ├── 02 - Build de MIAGE-Bank avec Buildah/        (build-buildah*.sh, ContainerfileVSNative.md)
+│   ├── 03 - Scan de sécurité avec Trivy/             (scan-trivy.sh, Trivy.md)
+│   ├── 04 - Audit de l'image avec Dive/              (audit-dive.sh, Dive.md)
+│   └── 05 - Script de build intégré/                 (ci-miage-bank.yml, CI.md)
+└── PARTIE B - Packaging Helm & Déploiement Kubernetes de MIAGE-Bank/
+    ├── 01 - Chart Helm pour MIAGE-Bank/              (Helm.md + copie du chart)
+    ├── 02 - Déploiement dans Kubernetes/             (Deploiement.md)
+    └── 03 - GitOps avec ArgoCD/                      (GitOps.md, copie de la config argocd)
 ```
 
----
+Les **artefacts déployés** sont à la racine du dépôt :
 
-## 8. Points d'amélioration possibles
+| Élément                     | Emplacement                         |
+| --------------------------- | ----------------------------------- |
+| Chart Helm                  | `miage-bank/`                       |
+| Application ArgoCD          | `argocd/application.yaml`           |
+| Containerfile services Java | `Containerfile`                     |
+| Containerfile frontend      | `Banque-Frontend/Containerfile`     |
+| Pipeline CI                 | `.github/workflows/`                |
+| Micro-services Spring       | `Banque-*/`                         |
+| Frontend Angular            | `Banque-Frontend/`                  |
 
-- **Exposition** : n'exposer que l'API Gateway (ou un frontend dédié) via
-  l'Ingress, plutôt qu'une route par micro-service, la gateway assurant déjà le
-  routage interne.
-- **Vault** : activer la persistance plutôt que le mode dev.
-- **Config server** : aligner le label Git (`default-label`) sur la branche réelle
-  du dépôt de configuration distant pour supprimer les avertissements
-  `RefNotFound` au démarrage.
+
+## Structure du projet (vue d'ensemble)
+
+- **`Banque-Annuaire`** — Eureka (service registry)
+- **`Banque-ConfigServer`** — Spring Cloud Config
+- **`Banque-ClientService`** — service clients (avec MySQL)
+- **`Banque-CompteService`** — service comptes (avec MongoDB)
+- **`Banque-CompositeService`** — agrégation client + comptes
+- **`Banque-APIGateway`** — point d'entrée backend unique
+- **`Banque-Frontend`** — frontend Angular
+- **`miage-bank/`** — chart Helm (déploiement Kubernetes)
+- **`argocd/`** — configuration GitOps
+- **`scripts/`** — scripts de build Buildah / scan Trivy / audit Dive
+
+## Démarrage rapide
+
+Il n'y a pas de démarrage rapide pour la partie A, tout se fait automatiquement lors d'un git push. 
+La CI publie les images qui serviront pour la partie B. 
+Le détail de démarrage de la partie B (prérequis, Vault/ESO, Traefik, ArgoCD) est documenté dans les sous dossiers de 
+`0-DOCUMENTATION-PROJET-DEVOPS/PARTIE B/`.
+
+
+
+## Environnement
+
+Développé et testé sous **WSL2 Debian**(12.8) + **minikube**(1.38.1), OS Windows 11(10.0.26200.8457)
+et navigateur Chrome(148.0.7778.217).
+
+Images publiées sur **GitHub Container Registry (GHCR)**.
+
+
+## Utilisation de l'IA (Claude et Gemini)
+Le frontend de l'application MIAGE-Bank a entièrement été développé par l'IA.
+Elle a également été utilisé dans un but de compréhension et d'aide à la rédaction de documents.
+Les concepts clés du projet ont été assimilé.

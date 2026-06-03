@@ -48,5 +48,3 @@ kubectl -n miage-bank get deploy apigateway
 
 *(Captures d'écran : état `Synced/Healthy`, passage `OutOfSync` après le scale,
 puis retour automatique à 1 réplica.)*
-
----

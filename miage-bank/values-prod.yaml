@@ -1,23 +1,20 @@
 # =============================================================================
-#  values-prod.yaml — Surcharges PRODUCTION pour MIAGE-Bank
+#  values-prod.yaml — Values pour MIAGE-Bank
 # -----------------------------------------------------------------------------
-#  Usage :
+#  Commande :
 #     helm install miage-bank ./miage-bank \
 #       -n miage-bank --create-namespace \
 #       -f miage-bank/values.yaml -f miage-bank/values-prod.yaml
 #
-#  Seules les clés qui CHANGENT par rapport à values.yaml sont redéfinies ;
-#  Helm fusionne en profondeur (deep-merge) les deux fichiers.
+#  Ce fichier a un rôle de surcharge du values.yaml pour la production
 # =============================================================================
 
 global:
-  # Domaine public réel exposé via l'Ingress Traefik en prod.
+  # Domaine exposé via l'Ingress Traefik
   domain: bank.miage-prod.fr
 
-# En prod, on monte les répliques des services exposés / critiques pour la
-# disponibilité. Les composants "singleton" (annuaire Eureka, config server)
-# restent à 1 réplique : les passer à N nécessiterait un mode HA dédié
-# (peer-awareness Eureka), hors périmètre de ce TP.
+# En production, on monte les répliques des services exposés pour la disponibilité
+# Nous montons les limites de mémoire et de cpu pour des raisons de performances
 microservices:
   apigateway:
     replicas: 3
