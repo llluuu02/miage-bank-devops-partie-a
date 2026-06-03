@@ -1,5 +1,4 @@
-NOM : GODARD
-Prénom : Lucas
+# NOM : GODARD, Prénom : Lucas
 
 # TP DevOps — MIAGE Bank : Buildah/Trivy/Dive & Helm/Kubernetes
 
@@ -28,8 +27,8 @@ Toute la documentation détaillée se trouve dans le dossier
 ├── PARTIE A - Chaine de build OCI avec Buildah, Trivy et Dive/
 │   ├── 01 - Analyse comparative Docker vs Buildah/   (DockerVSBuildah.md)
 │   ├── 02 - Build de MIAGE-Bank avec Buildah/        (build-buildah*.sh, ContainerfileVSNative.md)
-│   ├── 03 - Scan de sécurité avec Trivy/             (scan-trivy.sh, Trivy.md)
-│   ├── 04 - Audit de l'image avec Dive/              (audit-dive.sh, Dive.md)
+│   ├── 03 - Scan de sécurité avec Trivy/             (scan-trivy.sh, Trivy.md, reports)
+│   ├── 04 - Audit de l'image avec Dive/              (audit-dive.sh, Dive.md, reports)
 │   └── 05 - Script de build intégré/                 (ci-miage-bank.yml, CI.md)
 └── PARTIE B - Packaging Helm & Déploiement Kubernetes de MIAGE-Bank/
     ├── 01 - Chart Helm pour MIAGE-Bank/              (Helm.md + copie du chart)

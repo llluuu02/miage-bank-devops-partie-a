@@ -1,24 +1,26 @@
 name: CI MIAGE-Bank - OCI Build & Audit
 
+# CI déclenché sur la branche main
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
+# permissions pour pousser les images GHCR
 permissions:
   contents: read
   packages: write
 
 jobs:
   build-and-audit:
-    # Le nom du job s'adaptera dynamiquement pour chaque service
     name: Build & Audit - ${{ matrix.module }}
     runs-on: ubuntu-22.04
 
-    # C'est ici que la magie opère
     strategy:
-      fail-fast: false # Empêche l'arrêt de toute la matrice si un service échoue
+      # un échec n'annule pas le build des autres
+      fail-fast: false
+      # matrice qui permet de loop sur tous les micro-services
       matrix:
         module:
           - Banque-APIGateway
@@ -29,16 +31,19 @@ jobs:
           - Banque-ConfigServer
           - Banque-Frontend
 
+    # étapes de la CI pour chaque élément de la matrice
     steps:
+      # récupération du dépot dans le runner pour avoir les micro-services et scripts
       - name: Checkout du code
         uses: actions/checkout@v4
 
+      # création des dossiers pour exporter les rapports trivy et dive
       - name: Préparation de l'environnement
-        # Création d'un dossier dédié au module courant
         run: |
           mkdir -p build-reports/${{ matrix.module }}
           chmod +x scripts/*.sh
 
+      # transformation des noms d'image pour helm et exportation des images dans GITHUB_ENV
       - name: Calcul des noms d'image
         run: |
           NAME="$(echo "${{ matrix.module }}" | sed 's/Banque-//' | tr '[:upper:]' '[:lower:]')"
@@ -47,51 +52,50 @@ jobs:
           echo "LOCAL_IMAGE=localhost/miage-bank/${NAME}:7.0"              >> "$GITHUB_ENV"
           echo "GHCR_IMAGE=ghcr.io/${OWNER}/miage-bank-devops-partie-a/${NAME}:7.0" >> "$GITHUB_ENV"
 
+      # vérification des bonnes pratiques du Containerfile
       - name: Lint du Containerfile avec Hadolint
         uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Containerfile
+          dockerfile: ${{ matrix.module == 'Banque-Frontend' && 'Banque-Frontend/Containerfile' || 'Containerfile' }}
 
+      # build des images et exportation en local pour les scans trivy et dive
       - name: Build de l'image avec Buildah
         run: |
-          # 1. On build le module spécifique issu de la matrice
           ./scripts/build-buildah.sh ${{ matrix.module }}
-          
-          # 2. On génère le nom de l'image en minuscules (comme dans tes scripts)
           NAME="$(echo "${{ matrix.module }}" | sed 's/Banque-//' | tr '[:upper:]' '[:lower:]')"
-          
-          # 3. On exporte l'archive pour l'audit
           buildah push localhost/miage-bank/${NAME}:7.0 docker-archive:build-reports/${NAME}.tar
 
-      - name: 🔧 Installation des outils d'audit (Trivy & Dive)
+      # installation trivy (script officiel) et dive (.deb de la release)
+      - name: Installation des outils d'audit (Trivy & Dive)
         run: |
-          # Installation de Trivy via le script officiel d'AquaSecurity
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
-          
-          # Installation de Dive
           wget -qO dive.deb https://github.com/wagoodman/dive/releases/download/v0.12.0/dive_0.12.0_linux_amd64.deb
           sudo dpkg -i dive.deb
 
+      # scan complet avec exportation des rapports en JSON et SARIF
       - name: Génération des rapports Trivy
         run: |
           NAME="$(echo "${{ matrix.module }}" | sed 's/Banque-//' | tr '[:upper:]' '[:lower:]')"
-          # On passe le dossier cible en 2ème argument grâce à ton script bien pensé
           ./scripts/scan-trivy.sh build-reports/${NAME}.tar build-reports/${{ matrix.module }}
 
-      - name: 🛑 Gate de Sécurité Trivy
+      # gate trivy non-bloquant pour que la CI ne tombe pas en erreur
+      - name: Gate de Sécurité Trivy
         run: |
           NAME="$(echo "${{ matrix.module }}" | sed 's/Banque-//' | tr '[:upper:]' '[:lower:]')"
           trivy image --input build-reports/${NAME}.tar --severity CRITICAL --ignore-unfixed --exit-code 0 --no-progress
 
-      - name: 🐳 Audit des layers avec Dive
+      # audit dive en vérifiant les seuils d'efficacité et de gaspillage
+      - name: Audit des layers avec Dive
         run: |
           NAME="$(echo "${{ matrix.module }}" | sed 's/Banque-//' | tr '[:upper:]' '[:lower:]')"
           ./scripts/audit-dive.sh build-reports/${NAME}.tar build-reports/${{ matrix.module }}
-          
+
+      # connexion au ghcr pour la publication des images
       - name: Connexion à GHCR
         if: github.event_name == 'push'
         run: echo "${{ secrets.GITHUB_TOKEN }}" | buildah login -u ${{ github.actor }} --password-stdin ghcr.io
 
+      # push de l'image sur ghcr
       - name: Tag + Push de l'image vers GHCR
         if: github.event_name == 'push'
         run: |
@@ -99,11 +103,11 @@ jobs:
           buildah push "${GHCR_IMAGE}"
           echo "Image publiée : ${GHCR_IMAGE}"
 
-      - name: 📦 Export des rapports (Artifacts)
+      # export en artifact github des rapports trivy et dive
+      - name: Export des rapports (Artifacts)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          # Chaque module aura son propre fichier .zip téléchargeable sur GitHub
           name: reports-${{ matrix.module }}
           path: build-reports/${{ matrix.module }}/
           retention-days: 7
