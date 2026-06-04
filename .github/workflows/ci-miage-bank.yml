@@ -56,7 +56,7 @@ jobs:
       - name: Lint du Containerfile avec Hadolint
         uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: ${{ matrix.module == 'Banque-Frontend' && 'src/Banque-Frontend/Containerfile' || 'Containerfile' }}
+          dockerfile: ${{ matrix.module == 'Banque-Frontend' && 'src/Banque-Frontend/Containerfile' || 'src/Containerfile' }}
 
       # build des images et exportation en local pour les scans trivy et dive
       - name: Build de l'image avec Buildah
