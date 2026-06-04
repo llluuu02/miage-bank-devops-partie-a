@@ -71,7 +71,7 @@ jobs:
 
       # scan complet avec exportation automatique dans build-reports/trivy/
       - name: Génération des rapports Trivy
-        run: ./scripts/scan-trivy.sh images/${NAME}.tar
+        run: ./scripts/scan-trivy.sh images/containerfile-version/${NAME}.tar
 
       # gate trivy non-bloquant
       - name: Gate de Sécurité Trivy
