@@ -60,10 +60,7 @@ jobs:
 
       # build des images et exportation en local pour les scans trivy et dive
       - name: Build de l'image avec Buildah
-        run: |
-          ./scripts/build-buildah.sh ${{ matrix.module }}
-          NAME="$(echo "${{ matrix.module }}" | sed 's/Banque-//' | tr '[:upper:]' '[:lower:]')"
-          buildah push localhost/miage-bank/${NAME}:7.0 docker-archive:build-reports/${NAME}.tar
+        run: ./scripts/build-buildah.sh ${{ matrix.module }}
 
       # installation trivy (script officiel) et dive (.deb de la release)
       - name: Installation des outils d'audit (Trivy & Dive)
@@ -72,23 +69,17 @@ jobs:
           wget -qO dive.deb https://github.com/wagoodman/dive/releases/download/v0.12.0/dive_0.12.0_linux_amd64.deb
           sudo dpkg -i dive.deb
 
-      # scan complet avec exportation des rapports en JSON et SARIF
+      # scan complet avec exportation automatique dans build-reports/trivy/
       - name: Génération des rapports Trivy
-        run: |
-          NAME="$(echo "${{ matrix.module }}" | sed 's/Banque-//' | tr '[:upper:]' '[:lower:]')"
-          ./scripts/scan-trivy.sh build-reports/${NAME}.tar build-reports/${{ matrix.module }}
+        run: ./scripts/scan-trivy.sh images/${NAME}.tar
 
-      # gate trivy non-bloquant pour que la CI ne tombe pas en erreur
+      # gate trivy non-bloquant
       - name: Gate de Sécurité Trivy
-        run: |
-          NAME="$(echo "${{ matrix.module }}" | sed 's/Banque-//' | tr '[:upper:]' '[:lower:]')"
-          trivy image --input build-reports/${NAME}.tar --severity CRITICAL --ignore-unfixed --exit-code 0 --no-progress
+        run: trivy image --input images/${NAME}.tar --severity CRITICAL --ignore-unfixed --exit-code 0 --no-progress
 
-      # audit dive en vérifiant les seuils d'efficacité et de gaspillage
+      # audit dive avec exportation automatique dans build-reports/dive/
       - name: Audit des layers avec Dive
-        run: |
-          NAME="$(echo "${{ matrix.module }}" | sed 's/Banque-//' | tr '[:upper:]' '[:lower:]')"
-          ./scripts/audit-dive.sh build-reports/${NAME}.tar build-reports/${{ matrix.module }}
+        run: ./scripts/audit-dive.sh images/${NAME}.tar
 
       # connexion au ghcr pour la publication des images
       - name: Connexion à GHCR
@@ -109,5 +100,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: reports-${{ matrix.module }}
-          path: build-reports/${{ matrix.module }}/
+          path: build-reports/
           retention-days: 7
