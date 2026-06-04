@@ -33,4 +33,4 @@ dive "docker-archive://${ARCHIVE}" \
   --highestUserWastedPercent=0.10 | tee "$REPORT_FILE"
 
 echo "----------------------------------------------------------------------"
-echo "✅ OK : Rapport Dive sauvegardé dans $REPORT_FILE"
+echo "OK : Rapport Dive sauvegardé dans $REPORT_FILE"

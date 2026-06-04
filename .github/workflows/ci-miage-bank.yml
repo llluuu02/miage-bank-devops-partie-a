@@ -56,7 +56,7 @@ jobs:
       - name: Lint du Containerfile avec Hadolint
         uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: ${{ matrix.module == 'Banque-Frontend' && 'Banque-Frontend/Containerfile' || 'Containerfile' }}
+          dockerfile: ${{ matrix.module == 'Banque-Frontend' && 'src/Banque-Frontend/Containerfile' || 'Containerfile' }}
 
       # build des images et exportation en local pour les scans trivy et dive
       - name: Build de l'image avec Buildah
@@ -95,7 +95,7 @@ jobs:
         if: github.event_name == 'push'
         run: echo "${{ secrets.GITHUB_TOKEN }}" | buildah login -u ${{ github.actor }} --password-stdin ghcr.io
 
-      # push de l'image sur ghcr
+      # push de l'image sur ghcr pour la partie B du projet
       - name: Tag + Push de l'image vers GHCR
         if: github.event_name == 'push'
         run: |
