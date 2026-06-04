@@ -50,7 +50,7 @@ jobs:
           OWNER="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
           echo "NAME=${NAME}"                                              >> "$GITHUB_ENV"
           echo "LOCAL_IMAGE=localhost/miage-bank/${NAME}:7.0"              >> "$GITHUB_ENV"
-          echo "GHCR_IMAGE=ghcr.io/${OWNER}/miage-bank-devops-partie-a/${NAME}:7.0" >> "$GITHUB_ENV"
+          echo "GHCR_IMAGE=ghcr.io/${OWNER}/miage-bank-devops/${NAME}:7.0" >> "$GITHUB_ENV"
 
       # vérification des bonnes pratiques du Containerfile
       - name: Lint du Containerfile avec Hadolint

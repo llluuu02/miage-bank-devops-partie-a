@@ -19,7 +19,7 @@ spec:
 
   # source de l'application (git)
   source:
-    repoURL: https://github.com/llluuu02/miage-bank-devops-partie-a.git
+    repoURL: https://github.com/llluuu02/miage-bank-devops.git
     targetRevision: main
     path: miage-bank
     helm:

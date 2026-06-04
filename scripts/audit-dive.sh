@@ -42,7 +42,7 @@ for ARCHIVE in "${TARGETS[@]}"; do
   REPORT_FILE="$OUT/dive_${NAME}.txt"
 
   echo "============================================================================="
-  echo "==> 🐳 Démarrage de l'audit Dive pour : $ARCHIVE"
+  echo "==> Démarrage de l'audit Dive pour : $ARCHIVE"
   echo "==> Seuils : Eff >= 95% | Wasted <= 20MB | Wasted % <= 10%"
   echo "============================================================================="
 

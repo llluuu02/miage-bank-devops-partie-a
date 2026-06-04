@@ -39,7 +39,9 @@ jobs:
 
       # création des dossiers pour exporter les rapports trivy et dive
       - name: Préparation de l'environnement
-        run: chmod +x scripts/*.sh
+        run: |
+          mkdir -p build-reports/${{ matrix.module }}
+          chmod +x scripts/*.sh
 
       # transformation des noms d'image pour helm et exportation des images dans GITHUB_ENV
       - name: Calcul des noms d'image
@@ -67,17 +69,17 @@ jobs:
           wget -qO dive.deb https://github.com/wagoodman/dive/releases/download/v0.12.0/dive_0.12.0_linux_amd64.deb
           sudo dpkg -i dive.deb
 
-      # scan complet avec exportation des rapports en JSON et SARIF
+      # scan complet avec exportation automatique dans build-reports/trivy/
       - name: Génération des rapports Trivy
-        run: ./scripts/scan-trivy.sh images/${NAME}.tar
+        run: ./scripts/scan-trivy.sh images/containerfile-version/${NAME}.tar
 
-      # gate trivy non-bloquant pour que la CI ne tombe pas en erreur
+      # gate trivy non-bloquant
       - name: Gate de Sécurité Trivy
-        run: trivy image --input images/${NAME}.tar --severity CRITICAL --ignore-unfixed --exit-code 0 --no-progress
+        run: trivy image --input images/containerfile-version/${NAME}.tar --severity CRITICAL --ignore-unfixed --exit-code 0 --no-progress
 
-      # audit dive en vérifiant les seuils d'efficacité et de gaspillage
+      # audit dive avec exportation automatique dans build-reports/dive/
       - name: Audit des layers avec Dive
-        run: ./scripts/audit-dive.sh images/${NAME}.tar
+        run: ./scripts/audit-dive.sh images/containerfile-version/${NAME}.tar
 
       # connexion au ghcr pour la publication des images
       - name: Connexion à GHCR

@@ -1,4 +1,4 @@
-# 05 — Chaîne CI intégrée (GitHub Actions)
+# Chaîne CI intégrée (GitHub Actions)
 
 ## Objectif
 
@@ -30,7 +30,7 @@ Job **Build & Audit** exécuté en **matrice** (un run par `module`), sur
    `ghcr.io/<owner>/miage-bank-devops-partie-a/<service>:7.0`.
 3. **Lint Containerfile — Hadolint** (`hadolint/hadolint-action@v3.1.0`).
 4. **Build Buildah** : `./scripts/build-buildah.sh <module>`, puis export de
-   l'image en archive : `buildah push ... docker-archive:build-reports/<svc>.tar`.
+   l'image en archive : `buildah push ... docker-archive:images/containerfile-version/<svc>.tar`.
 5. **Installation des outils d'audit** : Trivy (script officiel) + Dive (v0.12.0).
 6. **Rapports Trivy** : `./scripts/scan-trivy.sh build-reports/<svc>.tar ...`
    (génère JSON + SARIF dans `build-reports/`).
@@ -61,9 +61,11 @@ Les rapports sont disponibles en **artifacts** du run GitHub Actions
 
 - Pipeline verte sur les 7 modules (6 services Java + frontend).
 - Images publiées : `ghcr.io/llluuu02/miage-bank-devops-partie-a/<service>:7.0`.
-- Rapports Trivy + Dive archivés (cf. sections 03 et 04).
+- Rapports Trivy + Dive archivés
 
-<!-- À COMPLÉTER : capture d'écran du run vert + capture de la page Packages GHCR -->
+![img.png](img.png)
+![img_1.png](img_1.png)
+![img_2.png](img_2.png)
 
 ## Livrables
 

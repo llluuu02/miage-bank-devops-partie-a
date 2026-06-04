@@ -2,7 +2,6 @@
 #  values.yaml — MIAGE-Bank
 # =============================================================================
 
-# Conservés car référencés par _helpers.tpl (nom du chart / fullname).
 nameOverride: ""
 fullnameOverride: ""
 
@@ -12,7 +11,7 @@ fullnameOverride: ""
 global:
   namespace: miage-bank
   domain: miage-bank.local
-  imageRegistry: ghcr.io/llluuu02/miage-bank-devops-partie-a
+  imageRegistry: ghcr.io/llluuu02/miage-bank-devops
 
 # -----------------------------------------------------------------------------
 #  Ingress (classe Traefik)
@@ -27,7 +26,7 @@ ingress:
 #  Flags par service :
 #    secret              -> génère un ExternalSecret + injecte les creds
 #    secretEnvPrefix     -> préfixe des variables de credentials
-#    disableConfigImport -> coupe l'import config server (cas Mongo)
+#    disableConfigImport -> coupe l'import config server (problème avec dépot de Mr Teyssie)
 #    springApp: false    -> service NON Spring (frontend) : pas d'Eureka/config/secret
 #    healthPath          -> chemin des probes (défaut /actuator/health)
 #    startup             -> active une startupProbe (services lents à démarrer)
@@ -40,9 +39,8 @@ microservices:
     port: 10000
     replicas: 1
     startup: true
-    # Force l'URL Eureka (priorité sur le config server qui pointait localhost:8761).
-    # On NE coupe PAS l'import config server : il fournit les routes de la gateway.
     extraEnv:
+      # Le Gateway doit trouver l'Annuaire pour router les requêtes
       - name: SPRING_APPLICATION_JSON
         value: '{"eureka":{"client":{"service-url":{"defaultZone":"http://annuaire:10001/eureka/"}}}}'
     resources:
