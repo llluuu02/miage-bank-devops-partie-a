@@ -1,6 +1,6 @@
 # NOM : GODARD, Prénom : Lucas
 
-# TP DevOps — MIAGE Bank : Buildah/Trivy/Dive & Helm/Kubernetes
+# Projet DevOps — MIAGE Bank : Buildah/Trivy/Dive & Helm/Kubernetes
 
 Projet réalisé dans le cadre du cours **M2 MIAGE - Mise en œuvre DevOps**.
 Il couvre la conteneurisation (Partie A) et le déploiement Kubernetes
@@ -39,25 +39,25 @@ Toute la documentation détaillée se trouve dans le dossier
 Les **artefacts déployés** sont à la racine du dépôt :
 
 | Élément                     | Emplacement                         |
-| --------------------------- | ----------------------------------- |
+| --------------------------- |-------------------------------------|
 | Chart Helm                  | `miage-bank/`                       |
 | Application ArgoCD          | `argocd/application.yaml`           |
-| Containerfile services Java | `Containerfile`                     |
-| Containerfile frontend      | `Banque-Frontend/Containerfile`     |
+| Containerfile services Java | `src/Containerfile`                 |
+| Containerfile frontend      | `src/Banque-Frontend/Containerfile` |
 | Pipeline CI                 | `.github/workflows/`                |
-| Micro-services Spring       | `Banque-*/`                         |
-| Frontend Angular            | `Banque-Frontend/`                  |
+| Micro-services Spring       | `src/Banque-*/`                     |
+| Frontend Angular            | `src/Banque-Frontend/`              |
 
 
 ## Structure du projet (vue d'ensemble)
 
-- **`Banque-Annuaire`** — Eureka (service registry)
-- **`Banque-ConfigServer`** — Spring Cloud Config
-- **`Banque-ClientService`** — service clients (avec MySQL)
-- **`Banque-CompteService`** — service comptes (avec MongoDB)
-- **`Banque-CompositeService`** — agrégation client + comptes
-- **`Banque-APIGateway`** — point d'entrée backend unique
-- **`Banque-Frontend`** — frontend Angular
+- **`src/Banque-Annuaire`** — Eureka (service registry)
+- **`src/Banque-ConfigServer`** — Spring Cloud Config
+- **`src/Banque-ClientService`** — service clients (avec MySQL)
+- **`src/Banque-CompteService`** — service comptes (avec MongoDB)
+- **`src/Banque-CompositeService`** — agrégation client + comptes
+- **`src/Banque-APIGateway`** — point d'entrée backend unique
+- **`src/Banque-Frontend`** — frontend Angular
 - **`miage-bank/`** — chart Helm (déploiement Kubernetes)
 - **`argocd/`** — configuration GitOps
 - **`scripts/`** — scripts de build Buildah / scan Trivy / audit Dive
@@ -67,7 +67,7 @@ Les **artefacts déployés** sont à la racine du dépôt :
 Il n'y a pas de démarrage rapide pour la partie A, tout se fait automatiquement lors d'un git push. 
 La CI publie les images qui serviront pour la partie B. 
 Le détail de démarrage de la partie B (prérequis, Vault/ESO, Traefik, ArgoCD) est documenté dans les sous dossiers de 
-`0-DOCUMENTATION-PROJET-DEVOPS/PARTIE B/`.
+`0-documentation/PARTIE B/`.
 
 
 
