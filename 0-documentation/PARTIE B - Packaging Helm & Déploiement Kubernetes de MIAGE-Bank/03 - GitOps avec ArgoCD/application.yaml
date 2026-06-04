@@ -2,46 +2,42 @@
 #  argocd/application.yaml — Application ArgoCD pour MIAGE-Bank
 # -----------------------------------------------------------------------------
 #  Déploie le chart Helm miage-bank/ depuis le dépôt Git, branche main, en
-#  synchronisation automatique (prune + selfHeal), conformément au sujet.
+#  synchronisation automatique
 #
-#    kubectl apply -f argocd/application.yaml
-#
-#  Prérequis NON gérés par cette Application (le "oeuf ou la poule" du sujet) :
-#    - CRD External Secrets Operator déjà installées
-#    - Vault déployé et peuplé (secret/miage-bank/*)
-#    - MySQL / MongoDB (si déployés hors chart)
-#  ArgoCD ne peut pas bootstrapper ces prérequis : ils doivent exister avant.
+#  Commande pour déployer ArgoCD : kubectl apply -f argocd/application.yaml
 # =============================================================================
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: miage-bank
   namespace: argocd
-  # Empêche ArgoCD de supprimer l'app sans nettoyer ses ressources
+  # suppression des ressources en cascade
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
 
+  # source de l'application (git)
   source:
-    repoURL: https://github.com/llluuu02/miage-bank-devops-partie-a.git
+    repoURL: https://github.com/llluuu02/miage-bank-devops.git
     targetRevision: main
-    path: miage-bank          # dossier du chart Helm dans le dépôt
+    path: miage-bank
     helm:
       valueFiles:
         - values.yaml
-      # Décommente pour appliquer aussi le profil prod :
-      # valueFiles:
-      #   - values.yaml
-      #   - values-prod.yaml
 
+  # destination (minikube)
   destination:
     server: https://kubernetes.default.svc
     namespace: miage-bank
 
+  # Paramètres de synchronisation
   syncPolicy:
     automated:
-      prune: true             # supprime les ressources retirées du Git
-      selfHeal: true          # ré-applique si dérive manuelle détectée
+      # suppression des ressources retirées du Git
+      prune: true
+      # re-déploiement si dérive manuelle détectée
+      selfHeal: true
+    # création namespace
     syncOptions:
-      - CreateNamespace=true  # ArgoCD crée le namespace (on a retiré namespace.yaml du chart)
+      - CreateNamespace=true

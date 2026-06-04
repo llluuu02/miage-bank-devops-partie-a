@@ -1,6 +1,6 @@
 spring:
   application:
-    name: comptesservice   # nom de l'application
+    name: compteservice   # nom de l'application
     # Activation remontée management dans Eureka
     config:
       service-registry:

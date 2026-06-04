@@ -1,9 +1,18 @@
+# Déploiement dans Kubernetes
+
+---
+
 ## Déploiement
 
 ```bash
 helm upgrade -i miage-bank ./miage-bank -n miage-bank --create-namespace
 kubectl -n miage-bank get pods
 ```
+
+![helm-upgrade.png](helm-upgrade.png)
+![get-pods.png](get-pods.png)
+
+---
 
 ## Gestion des secrets (Vault + ESO)
 
@@ -24,6 +33,9 @@ donc seuls ces deux services possèdent un `ExternalSecret`.
 # vérifier les statuts des deux externalsecrets
 kubectl -n miage-bank get externalsecret
 ```
+![secretstore.png](secretstore.png)
+
+---
 
 ## Particularité MongoDB
 
@@ -33,6 +45,8 @@ partir du Secret ESO :
 ```
 SPRING_DATA_MONGODB_URI = mongodb://<user>:<password>@bnkmongo:27017/banquebd?authSource=admin
 ```
+
+---
 
 ## Exposition via Ingress Traefik
 
@@ -54,6 +68,12 @@ Add-Content C:\Windows\System32\drivers\etc\hosts "`n127.0.0.1 miage-bank.local"
 
 L'Ingress déclare sa classe via `spec.ingressClassName: traefik`. Le hostname est configuré dans `Values.yaml`.
 
+![traefik-ingress.png](traefik-ingress.png)
+
+Capture du frontend affiché dans le navigateur sur http://miage-bank.local/ : 
+
+---
+
 ## Sécurité réseau et RBAC
 
 - **NetworkPolicy** : `default-deny-ingress` bloque tout le trafic entrant du
@@ -65,3 +85,5 @@ L'Ingress déclare sa classe via `spec.ingressClassName: traefik`. Le hostname e
   plus long à démarrer (clone d'un dépôt Git au boot), dispose en plus d'une
   `startupProbe` et d'un `timeoutSeconds` élargi pour éviter les redémarrages
   prématurés.
+
+![security.png](security.png)

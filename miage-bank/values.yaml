@@ -68,7 +68,7 @@ microservices:
       - name: SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL
         value: "main"
       - name: SPRING_CLOUD_CONFIG_SERVER_GIT_SEARCH_PATHS
-        value: "Banque-configs"
+        value: "src/Banque-configs"
     resources:
       requests: { memory: "256Mi", cpu: "100m" }
       limits:   { memory: "512Mi", cpu: "500m" }
@@ -83,6 +83,12 @@ microservices:
     extraEnv:
       - name: SPRING_APPLICATION_NAME
         value: "clientservice"
+      - name: SPRING_DATASOURCE_URL
+        value: "jdbc:mysql://bnkmysql:3306/banquebd?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+      - name: SPRING_ZIPKIN_ENABLED
+        value: "false"
+      - name: SPRING_SLEUTH_ENABLED
+        value: "false"
     resources:
       requests: { memory: "256Mi", cpu: "100m" }
       limits:   { memory: "512Mi", cpu: "500m" }

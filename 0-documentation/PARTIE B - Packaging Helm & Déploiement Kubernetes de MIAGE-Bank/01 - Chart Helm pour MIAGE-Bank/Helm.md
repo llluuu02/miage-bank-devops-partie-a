@@ -1,16 +1,20 @@
+# Chart Helm pour MIAGE-Bank
+
+---
+
 ## Structure du chart Helm
 
 ```
 miage-bank/
 ├── Chart.yaml
-├── values.yaml               # 
-├── values-prod.yaml          # 
+├── values.yaml               # Values par defaut
+├── values-prod.yaml          # Surcharge pour la prod
 └── templates/
     ├── _helpers.tpl
     ├── deployment.yaml       # 6 micro-services + frontend
     ├── service.yaml          # Services ClusterIP
     ├── ingress.yaml          # Ingress classe traefik pour exposer l'API et le frontend
-    ├── configmap.yaml        #
+    ├── configmap.yaml        # Config non sensible
     ├── networkpolicy.yaml    # default-deny + intra-namespace + from-traefik
     ├── serviceaccount.yaml   # 1 ServiceAccount par service (least privilege)
     ├── secretstore.yaml      # SecretStore Vault (ESO)
@@ -62,3 +66,18 @@ helm template miage-bank ./miage-bank -n miage-bank
 helm install miage-bank ./miage-bank -n miage-bank \
   --create-namespace --dry-run=server
 ```
+
+![lint-template.png](lint-template.png)
+![install-simulation.png](install-simulation.png)
+
+---
+
+## Points de conception notables
+
+- **Un seul `deployment.yaml`** génère les 7 déploiements via une boucle sur
+  `.Values.microservices`, chaque service étant piloté par des flags
+  (`secret`, `springApp`, `disableConfigImport`, `healthPath`, `startup`…).
+- **Bases packagées dans le chart** (`databases.yaml`) avec PVC, consommant les
+  **mêmes Secrets ESO** que les applications → Vault = source unique.
+- **`values-prod.yaml`** : profil de production (à appliquer avec
+  `-f values.yaml -f values-prod.yaml`).

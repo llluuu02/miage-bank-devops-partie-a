@@ -1,7 +1,7 @@
 # Proprietes de l'application
 spring:
   application:
-    name: clientscomptes # nom de l'application
+    name: compositeservice # nom de l'application
   cloud:
     # Activation remontée management dans Eureka
     config:

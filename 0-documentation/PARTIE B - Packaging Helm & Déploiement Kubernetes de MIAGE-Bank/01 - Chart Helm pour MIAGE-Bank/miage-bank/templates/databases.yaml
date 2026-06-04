@@ -1,9 +1,9 @@
 {{- /*
-  databases.yaml — Bases de données MIAGE-Bank dans le cluster.
+  databases.yaml - Bases de données MIAGE-Bank dans le cluster.
   -----------------------------------------------------------------------------
   - Services nommés bnkmysql / bnkmongo : ce sont les hostnames attendus par la
     configuration applicative (cf. clientservice-dev.yml / compteservice-dev.yml).
-  - Les identifiants NE sont PAS en clair : ils proviennent des Secrets générés
+  - Les identifiants ne sont pas en clair : ils proviennent des Secrets générés
     par ESO depuis Vault (clientservice-secret / compteservice-secret), exactement
     les mêmes que ceux injectés dans les applis -> Vault est la source unique.
   - PVC pour la persistance (les données survivent au redémarrage du pod).
@@ -11,6 +11,7 @@
 
 {{- if .Values.databases.mysql.enabled }}
 ---
+# --- MySQL : volume persistant ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -22,6 +23,7 @@ spec:
     requests:
       storage: {{ .Values.databases.mysql.storage | default "1Gi" }}
 ---
+# --- MySQL : déploiement (1 réplica, stratégie Recreate car volume RWO) ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,9 +32,11 @@ metadata:
   labels:
     app: bnkmysql
 spec:
+  # ReadWriteOnce -> 1 replica
   replicas: 1
+  # le nouveau pod démarre après l'interruption de l'ancien
   strategy:
-    type: Recreate          # une seule instance attachée au volume RWO
+    type: Recreate
   selector:
     matchLabels:
       app: bnkmysql
@@ -47,6 +51,7 @@ spec:
           ports:
             - containerPort: 3306
           env:
+            # Identifiants tirés du Secret ESO (mêmes creds que clientservice)
             - name: MYSQL_DATABASE
               value: {{ .Values.databases.mysql.database | quote }}
             # root password + utilisateur applicatif, tirés du Secret ESO
@@ -78,6 +83,7 @@ spec:
           persistentVolumeClaim:
             claimName: bnkmysql-pvc
 ---
+# --- MySQL : service ClusterIP (hostname "bnkmysql" attendu par clientservice) ---
 apiVersion: v1
 kind: Service
 metadata:
@@ -96,6 +102,7 @@ spec:
 
 {{- if .Values.databases.mongo.enabled }}
 ---
+# --- MongoDB : volume persistant ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -107,6 +114,7 @@ spec:
     requests:
       storage: {{ .Values.databases.mongo.storage | default "1Gi" }}
 ---
+# --- MongoDB : déploiement (1 réplica, Recreate) ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -115,7 +123,9 @@ metadata:
   labels:
     app: bnkmongo
 spec:
+  # ReadWriteOnce -> 1 replica
   replicas: 1
+  # le nouveau pod démarre après l'interruption de l'ancien
   strategy:
     type: Recreate
   selector:
@@ -132,8 +142,8 @@ spec:
           ports:
             - containerPort: 27017
           env:
-            # L'utilisateur root Mongo vit dans la base "admin" -> authSource=admin
-            # côté appli (compteservice). Identifiants tirés du Secret ESO.
+            # l'utilisateur root Mongo vit dans la base "admin" -> authSource=admin
+            # côté appli (compteservice). identifiants tirés du Secret ESO.
             - name: MONGO_INITDB_ROOT_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -159,6 +169,7 @@ spec:
           persistentVolumeClaim:
             claimName: bnkmongo-pvc
 ---
+# --- MongoDB : service ClusterIP (hostname "bnkmongo" attendu par compteservice) ---
 apiVersion: v1
 kind: Service
 metadata:

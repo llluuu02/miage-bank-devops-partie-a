@@ -1,5 +1,7 @@
 # GitOps avec ArgoCD
 
+---
+
 ## Mise en place
 
 ```bash
@@ -23,15 +25,17 @@ syncPolicy:
     - CreateNamespace=true
 ```
 
-## Le « problème de l'œuf ou la poule »
+> **Choix d'organisation** : l'`Application` ArgoCD est dans un dossier `argocd/`
+> séparé, pas dans le chart `miage-bank`. La mettre dans le chart qu'elle déploie
+> serait circulaire. Le manifeste est versionné dans Git et appliqué une fois pour
+> amorcer le GitOps.
 
-ArgoCD synchronise **uniquement le chart applicatif**. Les prérequis (CRD de
-l'External Secrets Operator, Vault peuplé) ne peuvent pas être bootstrappés par
-cette Application : les `ExternalSecret`/`SecretStore` ne sont validés par l'API
-qu'une fois les CRD installées. Ces composants sont donc déployés manuellement
-**avant** (voir §3), puis ArgoCD prend le relais sur le chart.
+![argocd-console.png](argocd-console.png)
+![argocd-ui.png](argocd-ui.png)
 
-## Exercice de dérive (réconciliation)
+---
+
+## Exercice de dérive
 
 Démonstration de la détection de dérive et de l'auto-réparation :
 
@@ -45,6 +49,18 @@ kubectl -n miage-bank scale deploy/apigateway --replicas=3
 #    apigateway revient automatiquement à 1 réplica, statut "Synced"
 kubectl -n miage-bank get deploy apigateway
 ```
+Avant la modif dans le helm :
+![derive-avant.png](derive-avant.png)
+Pendant la modif dans le helm :
+![derive-pendant.png](derive-pendant.png)
+Après la modif dans le helm :
+![derive-apres.png](derive-apres.png)
 
-*(Captures d'écran : état `Synced/Healthy`, passage `OutOfSync` après le scale,
-puis retour automatique à 1 réplica.)*
+Déroulé observé :
+1. **Avant** : `apigateway` à 1 réplica, Application `Synced`.
+2. **Après le scale à 3** : l'Application passe `OutOfSync` (l'état réel diverge du Git).
+3. **Réconciliation automatique** : `selfHeal` ré-applique le Git, `apigateway`
+   revient à **1 réplica**, l'Application repasse `Synced` — sans intervention manuelle.
+
+> L'interface ArgoCD permet de visualiser le passage `OutOfSync` puis le retour à
+> `Synced` ; les captures ci-dessus en attestent.
