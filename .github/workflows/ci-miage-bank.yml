@@ -75,11 +75,11 @@ jobs:
 
       # gate trivy non-bloquant
       - name: Gate de Sécurité Trivy
-        run: trivy image --input images/${NAME}.tar --severity CRITICAL --ignore-unfixed --exit-code 0 --no-progress
+        run: trivy image --input images/containerfile-version/${NAME}.tar --severity CRITICAL --ignore-unfixed --exit-code 0 --no-progress
 
       # audit dive avec exportation automatique dans build-reports/dive/
       - name: Audit des layers avec Dive
-        run: ./scripts/audit-dive.sh images/${NAME}.tar
+        run: ./scripts/audit-dive.sh images/containerfile-version/${NAME}.tar
 
       # connexion au ghcr pour la publication des images
       - name: Connexion à GHCR
