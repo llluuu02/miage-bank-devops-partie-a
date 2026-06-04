@@ -1,3 +1,9 @@
+{{- /*
+  ingress.yaml - point d'entrée HTTP unique (Traefik).
+  Deux routes : /api -> apigateway, / -> frontend.
+*/}}
+
+{{- /* Ingress généré seulement si activé dans values.yaml */}}
 {{- if .Values.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -5,15 +11,15 @@ metadata:
   name: miage-bank-ingress
   namespace: {{ .Values.global.namespace }}
 spec:
-  # Classe déclarée via le champ standard (l'annotation kubernetes.io/ingress.class
-  # est dépréciée). Vaut "traefik" d'après values.yaml.
+  # classe d'Ingress via le champ standard. Vaut "traefik" d'après values.yaml.
   ingressClassName: {{ .Values.ingress.className }}
   rules:
+    # hostname paramétrable (global.domain), ici : miage-bank.local
     - host: {{ .Values.global.domain }}
       http:
         paths:
-          # 1) /api -> API Gateway. La gateway matche déjà /api/clients, /api/comptes,
-          #    /api/clientscomptes : on transmet le préfixe tel quel (pas de stripPrefix).
+          # Route 1 : /api -> API Gateway. La gateway matche déjà /api/clients,
+          # /api/comptes, /api/clientscomptes : on transmet le préfixe tel quel
           - path: /api
             pathType: Prefix
             backend:
@@ -21,7 +27,8 @@ spec:
                 name: apigateway
                 port:
                   number: 10000
-          # 2) / -> Frontend (Angular servi par nginx). Catch-all, déclaré en dernier.
+          # Route 2 : / -> Frontend (SPA Angular servie par nginx).
+          # déclaré après /api pour ne pas intercepter les appels API.
           - path: /
             pathType: Prefix
             backend:
