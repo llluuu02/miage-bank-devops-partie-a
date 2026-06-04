@@ -16,11 +16,13 @@ Java n'a pas été développé ici ; un **frontend Angular** a en revanche été
 pour illustrer l'application. L'application MIAGE-Bank initiale n'a pas été modifiée : des
 fichiers inutiles au projet DevOps tel que le docker-compose.yml sont présents.
 
+Le repository initial (publique) : [https://github.com/llluuu02/miage-bank-devops.git](https://github.com/llluuu02/miage-bank-devops.git)
+
 
 ## Où trouver la documentation et les livrables
 
 Toute la documentation détaillée se trouve dans le dossier
-**`0-documentation/`**, organisé selon le plan du sujet :
+**[`0-documentation/`](0-documentation)**, organisé selon le plan du sujet :
 
 ```
 0-documentation/
@@ -51,23 +53,25 @@ Les **artefacts déployés** sont à la racine du dépôt :
 
 ## Structure du projet (vue d'ensemble)
 
-- **`src/Banque-Annuaire`** — Eureka (service registry)
-- **`src/Banque-ConfigServer`** — Spring Cloud Config
-- **`src/Banque-ClientService`** — service clients (avec MySQL)
-- **`src/Banque-CompteService`** — service comptes (avec MongoDB)
-- **`src/Banque-CompositeService`** — agrégation client + comptes
-- **`src/Banque-APIGateway`** — point d'entrée backend unique
-- **`src/Banque-Frontend`** — frontend Angular
-- **`miage-bank/`** — chart Helm (déploiement Kubernetes)
-- **`argocd/`** — configuration GitOps
-- **`scripts/`** — scripts de build Buildah / scan Trivy / audit Dive
+- **[`src/Banque-Annuaire`](src/Banque-Annuaire)** — Eureka (service registry)
+- **[`src/Banque-ConfigServer`](src/Banque-ConfigServer)** — Spring Cloud Config
+- **[`src/Banque-ClientService`](src/Banque-ClientService)** — service clients (avec MySQL)
+- **[`src/Banque-CompteService`](src/Banque-CompteService)** — service comptes (avec MongoDB)
+- **[`src/Banque-CompositeService`](src/Banque-CompositeService)** — agrégation client + comptes
+- **[`src/Banque-APIGateway`](src/Banque-APIGateway)** — point d'entrée backend unique
+- **[`src/Banque-Frontend`](src/Banque-Frontend)** — frontend Angular
+- **[`miage-bank/`](miage-bank)** — chart Helm (déploiement Kubernetes)
+- **[`argocd/`](argocd)** — configuration GitOps
+- **[`scripts/`](scripts)** — scripts de build Buildah / scan Trivy / audit Dive
+- **[`build-reports/`](build-reports)** — reports Trivy et Dive
+- **[`images/`](images)** — images .tar native et containerfile version
 
 ## Démarrage rapide
 
-Il n'y a pas de démarrage rapide pour la partie A, tout se fait automatiquement lors d'un git push. 
-La CI publie les images qui serviront pour la partie B. 
-Le détail de démarrage de la partie B (prérequis, Vault/ESO, Traefik, ArgoCD) est documenté dans le fichier
-`Installation.md` dans le dossier `0-documentation/PARTIE B/`.
+Il n'y a pas de démarrage rapide pour la partie A, tout se fait automatiquement lors d'un git push.
+La CI publie les images qui serviront pour la partie B.
+Le guide de la partie B (prérequis, Vault/ESO, Traefik, ArgoCD) est documenté dans le fichier
+[`Installation.md`](0-documentation/PARTIE%20B%20-%20Packaging%20Helm%20%26%20D%C3%A9ploiement%20Kubernetes%20de%20MIAGE-Bank/Installation.md).
 
 
 
