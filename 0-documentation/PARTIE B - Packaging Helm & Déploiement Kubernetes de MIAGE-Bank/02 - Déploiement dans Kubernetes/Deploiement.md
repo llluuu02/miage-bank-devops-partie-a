@@ -70,7 +70,8 @@ L'Ingress déclare sa classe via `spec.ingressClassName: traefik`. Le hostname e
 
 ![traefik-ingress.png](traefik-ingress.png)
 
-Capture du frontend affiché dans le navigateur sur http://miage-bank.local/ : 
+Capture du frontend affiché dans le navigateur sur http://miage-bank.local/ :
+![frontend.png](frontend.png)
 
 ---
 

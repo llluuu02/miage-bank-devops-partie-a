@@ -59,13 +59,13 @@ Les rapports sont disponibles en **artifacts** du run GitHub Actions
 
 ## Résultat
 
-- Pipeline verte sur les 7 modules (6 services Java + frontend).
-- Images publiées : `ghcr.io/llluuu02/miage-bank-devops-partie-a/<service>:7.0`.
+- Pipeline verte sur les 7 modules (6 services Java + frontend) -> [Voir le workflow CI sur GitHub Actions](https://github.com/llluuu02/miage-bank-devops/actions/workflows/ci-miage-bank.yml)
+- Images publiées : [Voir les images GHCR](https://github.com/llluuu02?tab=packages&repo_name=miage-bank-devops)
 - Rapports Trivy + Dive archivés
 
-![img.png](img.png)
-![img_1.png](img_1.png)
-![img_2.png](img_2.png)
+![jobs.png](jobs.png)
+![reports.png](reports.png)
+![packages.png](packages.png)
 
 ## Livrables
 

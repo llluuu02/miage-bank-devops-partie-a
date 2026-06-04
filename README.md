@@ -20,10 +20,10 @@ fichiers inutiles au projet DevOps tel que le docker-compose.yml sont présents.
 ## Où trouver la documentation et les livrables
 
 Toute la documentation détaillée se trouve dans le dossier
-**`0-DOCUMENTATION-PROJET-DEVOPS/`**, organisé selon le plan du sujet :
+**`0-documentation/`**, organisé selon le plan du sujet :
 
 ```
-0-DOCUMENTATION-PROJET-DEVOPS/
+0-documentation/
 ├── PARTIE A - Chaine de build OCI avec Buildah, Trivy et Dive/
 │   ├── 01 - Analyse comparative Docker vs Buildah/   (DockerVSBuildah.md)
 │   ├── 02 - Build de MIAGE-Bank avec Buildah/        (build-buildah*.sh, ContainerfileVSNative.md)
@@ -66,8 +66,8 @@ Les **artefacts déployés** sont à la racine du dépôt :
 
 Il n'y a pas de démarrage rapide pour la partie A, tout se fait automatiquement lors d'un git push. 
 La CI publie les images qui serviront pour la partie B. 
-Le détail de démarrage de la partie B (prérequis, Vault/ESO, Traefik, ArgoCD) est documenté dans les sous dossiers de 
-`0-documentation/PARTIE B/`.
+Le détail de démarrage de la partie B (prérequis, Vault/ESO, Traefik, ArgoCD) est documenté dans le fichier
+`Installation.md` dans le dossier `0-documentation/PARTIE B/`.
 
 
 
